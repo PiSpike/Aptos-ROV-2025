@@ -1,69 +1,207 @@
-# ROV
-MATE ROV Ranger Class
+Windows Client: Reads joystick input using Pygame and sends it over the network.
+Raspberry Pi Server: Listens for network data, interprets it, and controls motors/servos connected via a PCA9685 servo driver board.
+Part 1: Setting up the Windows Client Machine
 
+Install Python:
 
+Go to the official Python website: https://www.python.org/downloads/
+Download the latest stable version for Windows.
+Run the installer. Crucially, check the box that says "Add Python X.Y to PATH" during installation. This makes it easier to run Python from the command line.
+Follow the installer prompts.
+Install a Text Editor (VS Code Recommended):
 
-# For Setup on Raspberry Pi (bottom-side)
-Download bottom-side.py onto raspberry pi
-Connect to pi over VNC
+You need a program to write and edit the Python code. Visual Studio Code (VS Code) is a great free option.
+Download VS Code: https://code.visualstudio.com/
+Run the installer and follow the prompts.
+Open VS Code. It might prompt you to install the Python extension; if so, do it. Otherwise, go to the Extensions view (icon looks like squares on the left sidebar), search for "Python", and install the one by Microsoft.
+Get the Client Code:
 
-Modules That Don't Need Installation (Built-in)
+Open VS Code.
+Go to File > New Text File.
+Copy the second block of code (the one starting with import socket and import pygame) from your request.
+Paste it into the new file in VS Code.
+Go to File > Save As.... Choose a location (e.g., create a folder like C:\Projects\JoystickClient) and save the file as client.py.
+Install Pygame Module:
 
-These modules are part of Python's standard library, so you don't need to install them separately using pip. They come included with your Python installation.
+Open the Windows Command Prompt or PowerShell. You can search for cmd or powershell in the Windows Start menu.
+Type the following command and press Enter:
+Bash
 
-socket: Used for low-level network programming.
-pickle: Used for serializing and de-serializing Python object structures (saving objects to files/bytes and loading them back).
-time: Provides various time-related functions.
-Modules That Need Installation (Third-Party)
+pip install pygame
+This will download and install the Pygame library, which is needed to interact with the joystick.
+Connect Your Joystick:
 
-These modules are not part of the standard library and need to be installed using Python's package installer, pip. It's highly recommended to use Python 3 and its corresponding pip3.
+Plug your joystick into a USB port on your Windows computer. Windows should automatically detect it. You can check in Control Panel > Hardware and Sound > Devices and Printers (or similar path depending on your Windows version) to see if it's listed.
+Configure Network Address (Placeholder):
 
-board: This is part of Adafruit's Blinka library, which provides CircuitPython support (hardware APIs) on Linux boards like Raspberry Pi, BeagleBone, etc.
-adafruit_pca9685: This is the Adafruit CircuitPython library for controlling the PCA9685 16-Channel 12-bit PWM/Servo Driver. The package name usually follows the format adafruit-circuitpython-<libraryname>.
-adafruit_servokit: This is the Adafruit CircuitPython library that provides a high-level interface for controlling multiple servos, often using the PCA9685 driver.
-Installation Commands
+In the client.py file (open in VS Code), find this line:
+Python
 
-You'll use pip3 (the package installer for Python 3) to install the third-party modules.
+s.connect(("192.168.88.250", 5000)) # Change the IP address to the server's IP address
+You will need to replace "192.168.88.250" with the actual IP address of your Raspberry Pi after you set up the Pi and find its address (we'll do that in the next part). Leave it as is for now, but remember to come back here.
+Part 2: Setting up the Raspberry Pi Server
 
-Prerequisites:
+(Assuming you have Raspberry Pi OS installed and the Pi is connected to your network, keyboard, mouse, and monitor, or you can SSH into it).
 
-Ensure pip3 is installed:
-On Debian/Ubuntu-based systems:
+Update Raspberry Pi OS:
+
+Open the Terminal on your Raspberry Pi (the black icon in the top bar or find it in the Accessories menu).
+Run the following commands, pressing Enter after each one:
 Bash
 
 sudo apt update
-sudo apt install python3-pip
+sudo apt full-upgrade -y
+This ensures your system packages are up-to-date. It might take some time.
+Enable I2C Interface:
 
-
-
-(Highly Recommended) Use a Virtual Environment: This isolates project dependencies and avoids conflicts with system-wide packages.
+The PCA9685 board communicates using the I2C protocol. You need to enable this on the Pi.
+In the Terminal, run:
 Bash
 
-# Create a virtual environment (e.g., named 'myenv')
-python3 -m venv myenv
+sudo raspi-config
+Use the arrow keys to navigate to Interface Options. Press Enter.
+Navigate to I2C. Press Enter.
+Select <Yes> to enable the I2C interface. Press Enter.
+Select <Ok>.
+Navigate to Finish and press Enter. It might ask to reboot; select <Yes>.
+Install I2C Tools (Optional but helpful):
 
-# Activate the virtual environment
-source myenv/bin/activate
-
-# Now you can install packages within this environment
-# To deactivate later, simply run: deactivate
-Installation Command:
-
-Once pip3 is ready (and preferably inside an activated virtual environment), you can install the required Adafruit libraries. pip will automatically handle dependencies, so installing adafruit-circuitpython-servokit might also pull in board and adafruit-circuitpython-pca9685 if they are listed as dependencies. However, it's good practice to list them explicitly if you know you need them directly.
-
+After rebooting, open the Terminal again.
+Install tools to help detect I2C devices:
 Bash
 
-pip3 install adafruit-circuitpython-servokit adafruit-circuitpython-pca9685 board
-This command attempts to install adafruit-circuitpython-servokit.
-It also explicitly requests adafruit-circuitpython-pca9685 and board. pip is smart enough to fetch them only once if they are dependencies of each other or already installed.
-board relies on Adafruit_Blinka, which pip should install automatically as a dependency.
-System Dependencies for Hardware Access:
+sudo apt install -y i2c-tools
+Connect Hardware (PCA9685 and Motors/Servos):
 
-Libraries like board, adafruit_pca9685, and adafruit_servokit interact with hardware interfaces (like I2C). You might need to:
+Power down the Raspberry Pi (sudo shutdown now).
+Connect the Adafruit PCA9685 board to the Raspberry Pi's GPIO pins using the I2C pins:
+Pi 3.3V to PCA9685 VCC
+Pi SDA (GPIO 2) to PCA9685 SDA
+Pi SCL (GPIO 3) to PCA9685 SCL
+Pi GND to PCA9685 GND
+Connect the separate power supply for your motors/servos to the PCA9685 board's power terminal block (V+ and GND). Do NOT try to power motors/servos directly from the Raspberry Pi's 5V pin.
+Connect your motors (via ESCs if needed) and servos to the PWM output pins (0-15) on the PCA9685 board, matching the pin numbers defined in your server script (motor_1 = 4, claw_open = 15, etc.).
+Power up the Raspberry Pi.
+Verify I2C Connection (Optional):
 
-Enable Hardware Interfaces: On Raspberry Pi, use sudo raspi-config to enable I2C (and SPI if needed). Other boards have different methods.
-Install System Libraries: Blinka might require certain system development libraries or tools. Often, python3-smbus or i2c-tools are needed.
-On Debian/Ubuntu: sudo apt install python3-smbus i2c-tools
-On Fedora/CentOS/RHEL: sudo dnf install python3-smbus-cffi i2c-tools (Package names might vary slightly).
-Permissions: Your user might need to be part of a group (like i2c or gpio) to access these hardware interfaces without using sudo.
-Example: sudo adduser $USER i2c (You might need to log out and back in for the change to take effect).
+Open the Terminal.
+Run the command:
+Bash
+
+sudo i2cdetect -y 1
+You should see a grid. If the PCA9685 is connected correctly, you'll likely see a number like 40 (the default address) appear in the grid. If you see nothing or get an error, double-check your wiring.
+Install a Text Editor:
+
+Raspberry Pi OS usually comes with Thonny IDE, which is great for beginners. You can find it in the Programming menu.
+Alternatively, you can use the simple command-line editor nano.
+Get the Server Code:
+
+Open Thonny IDE (or use nano in the terminal: nano server.py).
+Copy the first block of code (the one starting with # Activate Python environment and import socket) from your request.
+Paste it into the editor.
+Save the file in a location you can easily find (e.g., your home directory /home/pi/) as server.py.
+Set Up a Python Virtual Environment (Recommended):
+
+Using a virtual environment keeps dependencies for this project separate from system-wide Python packages.
+Open the Terminal.
+Navigate to the directory where you saved server.py (if you saved it in the home directory, you are likely already there. If not, use cd path/to/your/script).
+Create the virtual environment:
+Bash
+
+python3 -m venv my_env
+(This creates a folder named my_env).
+Activate the virtual environment:
+Bash
+
+source my_env/bin/activate
+You should see (my_env) appear at the beginning of your terminal prompt. You need to activate this environment every time you open a new terminal to work on this project.
+Install Python Dependencies:
+
+Make sure your virtual environment is active (you see (my_env) in the prompt).
+Install the necessary Adafruit libraries:
+Bash
+
+pip install adafruit-circuitpython-pca9685 adafruit-circuitpython-servokit
+(Note: adafruit-blinka, the library that provides CircuitPython compatibility (like board) on Raspberry Pi, is usually installed as a dependency of the above libraries. If you encounter errors related to board, you might need to install it explicitly: pip install adafruit-blinka)
+Find the Raspberry Pi's IP Address:
+
+In the Terminal, run:
+Bash
+
+hostname -I
+This command will output the IP address(es) of your Raspberry Pi on the local network (e.g., 192.168.1.15 or similar). Write this IP address down. It might list multiple addresses; you usually want the one associated with your main network connection (WLAN or Ethernet).
+Update the Client Script with the Pi's IP Address:
+
+Go back to your Windows machine.
+Open client.py in VS Code.
+Find the line: s.connect(("192.168.88.250", 5000))
+Replace "192.168.88.250" with the actual IP address of your Raspberry Pi that you just found.
+Save the client.py file.
+Install and Configure VNC Server (Remote Desktop):
+
+This allows you to see and control the Raspberry Pi's graphical desktop from your Windows machine.
+In the Pi's Terminal, install the VNC server:
+Bash
+
+sudo apt update
+sudo apt install -y realvnc-vnc-server realvnc-vnc-viewer
+Enable the VNC Server:
+Bash
+
+sudo raspi-config
+Navigate to Interface Options. Press Enter.
+Navigate to VNC. Press Enter.
+Select <Yes> to enable the VNC Server. Press Enter.
+Select <Ok>.
+Navigate to Finish and press Enter. Reboot if prompted.
+On your Windows machine: Download and install a VNC client like RealVNC Viewer: https://www.realvnc.com/en/connect/download/viewer/
+Open RealVNC Viewer on Windows. Enter the Raspberry Pi's IP address in the connection bar and press Enter.
+You'll likely be prompted for the Raspberry Pi's username (usually pi) and password.
+You should now see the Raspberry Pi's desktop in a window on your Windows PC.
+Part 3: Running the Code
+
+Start the Server on the Raspberry Pi:
+
+Open a Terminal on the Raspberry Pi (either directly or via VNC/SSH).
+Navigate to the directory where you saved server.py (e.g., cd /home/pi/).
+Activate the virtual environment:
+Bash
+
+source my_env/bin/activate
+Run the server script:
+Bash
+
+python server.py
+You should see the output Server is now running. The script is now waiting for a connection from the client.
+Start the Client on the Windows Machine:
+
+Make sure your joystick is plugged in.
+Open Command Prompt or PowerShell on Windows.
+Navigate to the directory where you saved client.py (e.g., cd C:\Projects\JoystickClient).
+Run the client script:
+Bash
+
+python client.py
+If the connection is successful, you should see Pygame initializing and potentially printing the detected joystick name.
+As you move the joystick axes and press buttons, you should see the input list being printed in the Windows terminal, and this data will be sent to the Raspberry Pi.
+On the Raspberry Pi's terminal, you should see the received inputs list being printed each time the client sends data. The motors/servos connected to the PCA9685 should react based on the joystick movements.
+Troubleshooting Tips:
+
+Connection Refused (Client):
+Double-check the IP address in client.py matches the Pi's current IP address.
+Ensure the server.py script is running on the Pi before you start client.py.
+Check firewalls: Your Windows firewall might be blocking the outgoing connection, or (less likely) the Pi's firewall might block incoming connections on port 5000.
+Server Not Starting (Pi):
+ModuleNotFoundError: You forgot to install a required library (pip install ...) or you forgot to activate the virtual environment (source my_env/bin/activate) before running the script.
+IOError or I2C errors: Double-check the I2C wiring between the Pi and PCA9685. Make sure I2C is enabled via raspi-config. Run sudo i2cdetect -y 1 to see if the board is detected.
+Permission errors: Sometimes hardware access requires root privileges. Try running the server script with sudo python server.py, but be cautious when running scripts as root. Using Blinka usually avoids this.
+Client Not Detecting Joystick:
+Ensure the joystick is properly plugged in before running the script.
+Verify Windows sees the joystick in the Control Panel.
+Make sure pygame is installed correctly (pip install pygame).
+Motors/Servos Not Moving:
+Check the separate power supply for the PCA9685 board and motors/servos.
+Verify the motor/servo connections to the correct pins on the PCA9685.
+Check the PWM frequency setting (pca.frequency = 50) is appropriate for your servos/ESCs.
+Ensure the server script is receiving data (check the print statements on the Pi's terminal).
+You should now have a working system where your Windows joystick controls hardware connected to your Raspberry Pi!
