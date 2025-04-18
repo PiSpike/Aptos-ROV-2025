@@ -116,3 +116,118 @@ This project allows you to control motors and servos connected to a Raspberry Pi
         * Pi `GND` -> PCA9685 `GND`
     * Connect your **separate motor/servo power supply** to the PCA9685 `V+` and `GND` screw terminals.
     * Connect your motors/servos to the PWM pins (0-15) on the PCA9685.
+    * Power on the Raspberry Pi.
+
+4.  **Verify I2C Connection (Optional):**
+    * In the Terminal, run `sudo i2cdetect -y 1`.
+    * You should see `40` (or another address if changed) in the output grid, confirming the Pi sees the PCA9685.
+
+5.  **Get the Code:**
+    * Open Thonny IDE or use `nano` (`nano bottom-side.py`).
+    * Copy the contents of the server script (the first script in the original request, using `adafruit_pca9685`).
+    * Save the file as `bottom-side.py` (e.g., in `/home/pi/`).
+
+6.  **Set Up Virtual Environment (Recommended):**
+    * Navigate to the directory where you saved `bottom-side.py`:
+        ```bash
+        cd /path/to/your/script # e.g., cd /home/pi/
+        ```
+    * Create the environment:
+        ```bash
+        python3 -m venv my_env
+        ```
+    * Activate the environment ( **Do this every time you open a new terminal for this project** ):
+        ```bash
+        source my_env/bin/activate
+        ```
+        Your prompt should now start with `(my_env)`.
+
+7.  **Install Dependencies:**
+    * Make sure the virtual environment is active (`(my_env)` is in the prompt).
+    * Install the required libraries:
+        ```bash
+        pip install adafruit-circuitpython-pca9685 adafruit-circuitpython-servokit
+        ```
+        *(Note: `adafruit-blinka` should be installed automatically as a dependency)*
+
+8.  **Find Raspberry Pi IP Address:**
+    * In the Terminal, run:
+        ```bash
+        hostname -I
+        ```
+    * Note down the IP address displayed (e.g., `192.168.1.XX`).
+
+9.  **Update Client Script:**
+    * Go back to your **Windows PC**.
+    * Edit `top-side.py`.
+    * Replace `"192.168.88.250"` in the `s.connect(...)` line with the **actual IP address of your Raspberry Pi**.
+    * Save the file.
+
+10. **Install and Enable VNC (Optional Remote Desktop):**
+    * In the Pi's Terminal:
+        ```bash
+        sudo apt update
+        sudo apt install -y realvnc-vnc-server realvnc-vnc-viewer
+        sudo raspi-config
+        ```
+    * Navigate to `Interface Options` -> `VNC`.
+    * Select `<Yes>` to enable. Finish and reboot if needed.
+    * On Windows, install RealVNC Viewer ([Download](https://www.realvnc.com/en/connect/download/viewer/)) and connect using the Pi's IP address.
+
+---
+
+## Running the Application
+
+**Important:** The server (`bottom-side.py`) must be running *before* you start the client (`top-side.py`).
+
+1.  **Start the Server (on Raspberry Pi):**
+    * Open a Terminal on the Pi (directly or via VNC/SSH).
+    * Navigate to the script directory (e.g., `cd /home/pi/`).
+    * Activate the virtual environment:
+        ```bash
+        source my_env/bin/activate
+        ```
+    * Run the server script:
+        ```bash
+        python bottom-side.py
+        ```
+    * You should see the message: `Server is now running`.
+
+2.  **Start the Client (on Windows PC):**
+    * Ensure your joystick is plugged in.
+    * Open Command Prompt or PowerShell.
+    * Navigate to the script directory (e.g., `cd C:\Projects\JoystickControl`).
+    * Run the client script:
+        ```bash
+        python top-side.py
+        ```
+    * The client should connect to the server. You will see joystick input data printed in the client terminal, and this data will be sent to the Pi. The Pi terminal will show the received data, and the connected motors/servos should respond.
+
+3.  **Stopping:**
+    * Press `Ctrl + C` in the client terminal (Windows).
+    * Press `Ctrl + C` in the server terminal (Raspberry Pi).
+
+---
+
+## Troubleshooting
+
+* **Connection Refused (Windows Client):**
+    * Verify the IP address in `top-side.py` is correct and matches the Pi's current IP.
+    * Ensure `bottom-side.py` is running on the Pi *before* starting `top-side.py`.
+    * Check Windows Firewall isn't blocking the outbound connection from `python.exe`.
+    * Make sure both devices are on the same local network.
+* **`ModuleNotFoundError` (Pi or Windows):**
+    * Pi: Make sure you have activated the virtual environment (`source my_env/bin/activate`) before running `pip install` or `python bottom-side.py`.
+    * Install the missing library using `pip install <library_name>`.
+* **I2C Errors / `IOError` (Pi Server):**
+    * Double-check wiring between Pi and PCA9685 (SDA, SCL, VCC, GND).
+    * Confirm I2C is enabled (`sudo raspi-config`).
+    * Check device detection (`sudo i2cdetect -y 1`).
+* **Motors/Servos Not Moving:**
+    * Check the separate power supply for the PCA9685. Is it turned on? Is it adequate?
+    * Verify motor/servo connections to the PCA9685 pins match the pin numbers in `bottom-side.py`.
+    * Check the Pi's terminal output to see if data is being received correctly.
+* **Joystick Not Detected (Windows Client):**
+    * Ensure the joystick is plugged in before running `top-side.py`.
+    * Check if Windows recognizes the joystick in the Control Panel.
+    * Make sure `pygame` is installed (`pip install pygame`).
