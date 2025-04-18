@@ -69,7 +69,7 @@ This project allows you to control motors and servos connected to a Raspberry Pi
 
 3.  **Get the Code:**
     * Create a new file in your text editor.
-    * Copy the contents of the client script (the second script in the original request, the one using `pygame`).
+    * Copy the contents of the client script (top-side.py).
     * Save the file as `top-side.py` in a convenient location (e.g., `C:\Projects\JoystickControl`).
 
 4.  **Install Dependencies:**
