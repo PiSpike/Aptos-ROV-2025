@@ -1,6 +1,6 @@
 # Joystick Controlled Raspberry Pi Robot
 
-This project was made for [MATE ROV](https://materovcompetition.org/) Ranger Class 2025
+This project was made for [MATE ROV](https://materovcompetition.org/) Ranger Class 2025. \n
 This project allows you to control motors and servos connected to a Raspberry Pi using a joystick connected to a Windows PC. Communication between the two systems happens over a local network connection.
 
 * **`top-side.py` (Windows Client):** Reads joystick input via Pygame, processes it, and sends it over TCP/IP.
