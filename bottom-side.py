@@ -1,5 +1,5 @@
 # Activate Python environment
-#source my_env/bin/activate
+# source my_env/bin/activate
 
 import socket
 import pickle
@@ -24,6 +24,7 @@ kit = ServoKit(channels=16)
 pca.frequency = 50
 
 # Motor and Servo configurations
+# Change these based on which port each motor is pluged in to
 motor_1 = 4
 motor_2 = 6
 motor_3 = 0
@@ -57,3 +58,9 @@ while True:
         pca.channels[motor_2].duty_cycle = convert(inputs[1])
         pca.channels[motor_3].duty_cycle = convert(inputs[2])
         pca.channels[motor_4].duty_cycle = convert(inputs[3])
+        pca.channels[motor_5].duty_cycle = convert(inputs[4])
+        pca.channels[motor_5].duty_cycle = convert(inputs[5])
+        pca.channels[motor_5].duty_cycle = convert(inputs[6])
+        pca.channels[motor_5].duty_cycle = convert(inputs[7])
+        pca.channels[motor_5].duty_cycle = convert(inputs[8])
+        
