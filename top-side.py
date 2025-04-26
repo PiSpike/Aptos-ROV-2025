@@ -5,7 +5,7 @@ import time
 
 # Initialize socket connection
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect(("192.168.88.250", 5000))  # Change the IP address to the server's IP address
+s.connect(("192.168.88.253", 5000))  # Change the IP address to the server's IP address
 
 # Initialize Pygame and joystick
 pygame.init()
@@ -16,13 +16,17 @@ run = True
 gotjoystick = False
 
 # Initial claw angles
-claw_angle = 90
+claw_angle = 50
 claw_rotate = 90
+syringe_angle = 90
+camera_angle = 90
 
 # Input array to store joystick inputs
-input = [0] * 10
+input = [0] * 12
 input[8] = claw_angle
 input[9] = claw_rotate
+input[10] = syringe_angle
+input[11] = camera_angle
 print(input)
 
 def clamp(value):
@@ -56,8 +60,8 @@ def calculate_lift(up_down, pitch, roll):
     """
     motor5_pwm = round(clamp(up_down - roll), 3)
     motor6_pwm = round(clamp(up_down + roll), 3)
-    motor7_pwm = round(clamp(up_down - pitch), 3)
-    motor8_pwm = round(clamp(up_down + pitch), 3)
+    motor7_pwm = round(clamp(up_down + pitch), 3)
+    motor8_pwm = round(clamp(up_down - pitch), 3)
 
     input[4] = motor5_pwm
     input[5] = motor6_pwm
@@ -99,18 +103,29 @@ try:
                     elif button == 7:
                         roll = -1
                     if button == 14:
-                        claw_angle = 55
+                        claw_angle = 65
                     if button == 13:
-                        claw_angle = 90
+                        claw_angle = 100
+                    if button == 12:
+                        syringe_angle = 180
+                    if button == 15:
+                        syringe_angle = 0
+                    if button == 1:
+                        camera_angle = 0
+                    if button == 2:
+                        camera_angle = 180
 
                     input[8] = claw_angle
                     input[9] = claw_rotate
+                    input[10] = syringe_angle
+                    input[11] = camera_angle
+
 
             # Check joystick axes
-            yaw_val = joystick.get_axis(0)
+            yaw_val = .5*joystick.get_axis(0)
             forward_backward = -joystick.get_axis(3)
             left_right = joystick.get_axis(2)
-            up_down = -joystick.get_axis(1)
+            up_down = joystick.get_axis(1)
 
             # Apply deadband to joystick input
             deadband = 0.05
